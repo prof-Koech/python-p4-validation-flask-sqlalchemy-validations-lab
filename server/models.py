@@ -12,9 +12,7 @@ class Author(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    def __repr__(self):
-        return f'Author(id={self.id}, name={self.name})'
-   
+    
    
    
     @validates('name')
@@ -35,6 +33,10 @@ class Author(db.Model):
             raise ValueError("phone number must be 10 numbers")
         return phone_number
 
+def __repr__(self):
+        return f'Author(id={self.id}, name={self.name})'
+   
+   
 
 class Post(db.Model):
     __tablename__ = 'posts'
@@ -51,28 +53,32 @@ class Post(db.Model):
 
 
 
-    @validates('title')
-    def validate_title(self, key, title):
-        clickbait = ["Won't Believe", "Secret", "Top", "Guess"]
-        if not any(substring in title for substring in clickbait):
-            raise ValueError("No clickbait found")
-        return title
+@validates("title")
+def validate_title(self, key, title):
+        if not title.strip():
+            raise ValueError("Post must have a title.")
+        return title.strip()
 
-    @validates('content', 'summary')
-    def validate_length(self, key, string):
-        if( key == 'content'):
-            if len(string) <= 250:
-                raise ValueError("Post content must be greater than or equal 250 characters long.")
-        if( key == 'summary'):
-            if len(string) >= 250:
-                raise ValueError("Post summary must be less than or equal to 250 characters long.")
-        return string
+@validates("content")
+def validate_content(self, key, content):
+        if content and len(content) < 250:
+            raise ValueError("Content must be at least 250 characters long.")
+        return content
 
-    @validates('category')
-    def validate_category(self, key, category):
-        if category != 'Fiction' and category != 'Non-Fiction':
-            raise ValueError("Category must be Fiction or Non-Fiction.")
-        return category
+@validates("summary")
+def validate_summary(self, key, summary):
+        if summary and len(summary) > 250:
+            raise ValueError("Summary must be less than or equal to 250 characters.")
+        return summary
 
-    def __repr__(self):
+@validates("category")
+def validate_category(self, key, category):
+        valid_categories = ["Fiction", "Non-Fiction"]
+        if category not in valid_categories:
+            raise ValueError(
+                f'Invalid category. Valid categories are: {", ".join(valid_categories)}.'
+            )
+        return category   
+
+def __repr__(self):
         return f'Post(id={self.id}, title={self.title} content={self.content}, summary={self.summary})'
